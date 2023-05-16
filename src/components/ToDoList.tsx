@@ -1,58 +1,42 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
+import React from "react";
+import CreateToDo from "./CreateToDo";
+import { useRecoilState, useRecoilValue } from "recoil";
 import {
-  atom,
-  useRecoilState,
-  useRecoilValue,
-  useSetRecoilState,
-} from "recoil";
-
-const toDoState = atom<IToDo[]>({
-  key: "toDo",
-  default: [],
-});
-
-interface IForm {
-  toDo: string;
-}
-
-interface IToDo {
-  text: string;
-  id: number;
-  category: "DONE" | "DOING" | "TO_DO";
-}
+  Categories,
+  categoryList,
+  categoryState,
+  toDoSelector,
+  toDoState,
+} from "../atoms";
+import ToDo from "./ToDo";
+import CreateCategory from "./CreateCategory";
 
 function ToDoList() {
-  const [toDos, setToDos] = useRecoilState(toDoState);
-
-  const { register, handleSubmit, setValue } = useForm<IForm>();
-
-  const handleValid = ({ toDo }: IForm) => {
-    setToDos((oldToDos) => [
-      { text: toDo, category: "TO_DO", id: Date.now() },
-      ...oldToDos,
-    ]);
-    setValue("toDo", "");
+  const toDos = useRecoilValue(toDoSelector);
+  const [category, setCategory] = useRecoilState(categoryState);
+  const categoryListSelect = useRecoilValue(categoryList);
+  const onInput = (event: React.FormEvent<HTMLSelectElement>) => {
+    setCategory(event.currentTarget.value as any);
   };
-
   return (
     <div>
       <h1>To Dos</h1>
       <hr />
-      <form onSubmit={handleSubmit(handleValid)}>
-        <input
-          {...register("toDo", {
-            required: "Please write a To Do",
-          })}
-          placeholder={"Write a to do"}
-        />
-        <button>Add</button>
-      </form>
-      <ul>
-        {toDos.map((toDo) => (
-          <li key={toDo.id}>{toDo.text}</li>
+      <select value={category} onInput={onInput}>
+        {/*<option value={Categories.TO_DO}>To Do</option>*/}
+        {/*<option value={Categories.DOING}>Doing</option>*/}
+        {/*<option value={Categories.DONE}>Done</option>*/}
+        {Object.values(categoryListSelect).map((item, index) => (
+          <option key={`option_${index}`} value={item}>
+            {item}
+          </option>
         ))}
-      </ul>
+      </select>
+      <CreateCategory />
+      <CreateToDo />
+      {toDos?.map((_toDo) => (
+        <ToDo key={_toDo.id} {..._toDo} />
+      ))}
     </div>
   );
 }
